@@ -1,0 +1,1469 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+    <title>Brújula AR · Eclipse 2026</title>
+    <style>
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      :root {
+        --bg: #06060f;
+        --bg2: #0d0d22;
+        --border: rgba(255, 255, 255, 0.1);
+        --text: #e8e6f0;
+        --text2: #9a96b4;
+        --text3: #5c5880;
+        --gold: #f0c040;
+        --gold2: #b8860b;
+        --gold-bg: rgba(240, 192, 64, 0.12);
+        --gold-border: rgba(240, 192, 64, 0.35);
+        --moon: #c8d8f0;
+        --moon-bg: rgba(180, 210, 255, 0.12);
+        --totality: rgba(240, 192, 64, 0.22);
+      }
+      html,
+      body {
+        height: 100%;
+        overflow: hidden;
+        background: var(--bg);
+        color: var(--text);
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+        -webkit-user-select: none;
+        user-select: none;
+        touch-action: none;
+      }
+
+      /* ── SCREENS ───────────────────────────────── */
+      .screen {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        transition: opacity 0.3s;
+      }
+      .screen.hidden {
+        opacity: 0;
+        pointer-events: none;
+      }
+
+      /* ── INTRO SCREEN ──────────────────────────── */
+      #screen-intro {
+        background:
+          radial-gradient(
+            ellipse 80% 60% at 50% 30%,
+            rgba(240, 192, 64, 0.07) 0%,
+            transparent 70%
+          ),
+          var(--bg);
+        align-items: center;
+        justify-content: center;
+        gap: 0;
+        padding: 2rem;
+      }
+      .intro-eclipse {
+        font-size: 80px;
+        margin-bottom: 1.5rem;
+        filter: drop-shadow(0 0 40px rgba(240, 192, 64, 0.4));
+      }
+      .intro-title {
+        font-size: 22px;
+        font-weight: 700;
+        color: #fff;
+        text-align: center;
+        letter-spacing: -0.02em;
+        margin-bottom: 0.5rem;
+      }
+      .intro-title span {
+        color: var(--gold);
+      }
+      .intro-sub {
+        font-size: 13px;
+        color: var(--text2);
+        text-align: center;
+        line-height: 1.6;
+        max-width: 320px;
+        margin-bottom: 2rem;
+      }
+      .intro-cards {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 10px;
+        width: 100%;
+        max-width: 360px;
+        margin-bottom: 2rem;
+      }
+      .icard {
+        background: var(--bg2);
+        border: 0.5px solid var(--border);
+        border-radius: 12px;
+        padding: 12px 8px;
+        text-align: center;
+      }
+      .icard-icon {
+        font-size: 22px;
+        margin-bottom: 6px;
+      }
+      .icard-label {
+        font-size: 11px;
+        color: var(--text2);
+        line-height: 1.4;
+      }
+      .btn-primary {
+        background: var(--gold);
+        color: #06060f;
+        font-size: 14px;
+        font-weight: 700;
+        padding: 14px 32px;
+        border-radius: 30px;
+        border: none;
+        cursor: pointer;
+        letter-spacing: 0.04em;
+        box-shadow: 0 4px 24px rgba(240, 192, 64, 0.35);
+        transition: all 0.15s;
+        width: 100%;
+        max-width: 320px;
+      }
+      .btn-primary:hover {
+        box-shadow: 0 4px 32px rgba(240, 192, 64, 0.5);
+        transform: translateY(-1px);
+      }
+      .btn-primary:active {
+        transform: translateY(0);
+      }
+      .btn-secondary {
+        background: none;
+        border: 0.5px solid var(--border);
+        color: var(--text2);
+        font-size: 12px;
+        padding: 8px 20px;
+        border-radius: 20px;
+        cursor: pointer;
+        margin-top: 10px;
+        transition: all 0.15s;
+      }
+      .btn-secondary:hover {
+        border-color: var(--border);
+        color: var(--text);
+      }
+
+      /* ── AR SCREEN ─────────────────────────────── */
+      #screen-ar {
+        background: var(--bg);
+        flex-direction: column;
+      }
+
+      /* TOP BAR */
+      .ar-topbar {
+        flex-shrink: 0;
+        padding: 0.6rem 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        border-bottom: 0.5px solid var(--border);
+        background: rgba(6, 6, 15, 0.85);
+        backdrop-filter: blur(8px);
+        position: relative;
+        z-index: 10;
+      }
+      .ar-title {
+        font-size: 13px;
+        font-weight: 600;
+        color: #fff;
+      }
+      .ar-time-badge {
+        font-size: 11px;
+        color: var(--gold);
+        background: var(--gold-bg);
+        border: 0.5px solid var(--gold-border);
+        padding: 3px 10px;
+        border-radius: 12px;
+      }
+      .ar-back {
+        background: none;
+        border: 0.5px solid var(--border);
+        color: var(--text2);
+        font-size: 11px;
+        padding: 4px 10px;
+        border-radius: 8px;
+        cursor: pointer;
+      }
+
+      /* STATUS BAR */
+      .ar-statusbar {
+        flex-shrink: 0;
+        padding: 0.4rem 1rem;
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        border-bottom: 0.5px solid rgba(255, 255, 255, 0.05);
+        background: rgba(6, 6, 15, 0.6);
+      }
+      .status-pill {
+        font-size: 10.5px;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        color: var(--text3);
+      }
+      .status-dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        flex-shrink: 0;
+      }
+      .dot-ok {
+        background: #4caf50;
+        box-shadow: 0 0 6px #4caf5080;
+      }
+      .dot-warn {
+        background: #ff9800;
+        box-shadow: 0 0 6px #ff980080;
+      }
+      .dot-off {
+        background: #555;
+        box-shadow: none;
+      }
+
+      /* AR CANVAS CONTAINER */
+      .ar-viewport {
+        flex: 1;
+        position: relative;
+        overflow: hidden;
+      }
+      #ar-canvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+
+      /* BOTTOM INFO BAR */
+      .ar-infobar {
+        flex-shrink: 0;
+        padding: 0.75rem 1rem;
+        border-top: 0.5px solid var(--border);
+        background: rgba(6, 6, 15, 0.9);
+        backdrop-filter: blur(10px);
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 8px;
+      }
+      .info-cell {
+        text-align: center;
+      }
+      .info-lbl {
+        font-size: 9.5px;
+        color: var(--text3);
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        margin-bottom: 3px;
+      }
+      .info-val {
+        font-size: 15px;
+        font-weight: 700;
+        color: #fff;
+      }
+      .info-sub {
+        font-size: 9.5px;
+        color: var(--text2);
+        margin-top: 1px;
+      }
+
+      /* CALIBRATION OVERLAY */
+      #calib-overlay {
+        position: absolute;
+        inset: 0;
+        background: rgba(6, 6, 15, 0.88);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 16px;
+        z-index: 50;
+        transition: opacity 0.4s;
+      }
+      #calib-overlay.hidden {
+        opacity: 0;
+        pointer-events: none;
+      }
+      .calib-icon {
+        font-size: 48px;
+        animation: spin 3s linear infinite;
+      }
+      @keyframes spin {
+        from {
+          transform: rotate(0deg);
+        }
+        to {
+          transform: rotate(360deg);
+        }
+      }
+      .calib-text {
+        font-size: 14px;
+        color: var(--text2);
+        text-align: center;
+        line-height: 1.6;
+        max-width: 260px;
+      }
+      .calib-hint {
+        font-size: 12px;
+        color: var(--text3);
+        text-align: center;
+      }
+
+      /* PERMISSION DENIED */
+      #perm-overlay {
+        position: absolute;
+        inset: 0;
+        background: rgba(6, 6, 15, 0.95);
+        display: none;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 14px;
+        padding: 2rem;
+        z-index: 60;
+      }
+      #perm-overlay.visible {
+        display: flex;
+      }
+      .perm-icon {
+        font-size: 44px;
+      }
+      .perm-title {
+        font-size: 16px;
+        font-weight: 600;
+        color: #fff;
+        text-align: center;
+      }
+      .perm-desc {
+        font-size: 12px;
+        color: var(--text2);
+        text-align: center;
+        line-height: 1.6;
+        max-width: 280px;
+      }
+
+      /* ECLIPSE PHASE BADGE */
+      .phase-badge {
+        position: absolute;
+        top: 10px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 20;
+        background: rgba(6, 6, 15, 0.88);
+        backdrop-filter: blur(8px);
+        border: 0.5px solid var(--gold-border);
+        color: var(--gold);
+        font-size: 11px;
+        font-weight: 600;
+        padding: 5px 14px;
+        border-radius: 20px;
+        white-space: nowrap;
+        opacity: 0;
+        transition: opacity 0.5s;
+      }
+      .phase-badge.visible {
+        opacity: 1;
+      }
+
+      /* LEGEND */
+      .ar-legend {
+        position: absolute;
+        bottom: 10px;
+        right: 10px;
+        z-index: 20;
+        background: rgba(6, 6, 15, 0.82);
+        backdrop-filter: blur(6px);
+        border: 0.5px solid var(--border);
+        border-radius: 8px;
+        padding: 8px 10px;
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+      }
+      .leg-row {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        font-size: 10px;
+        color: var(--text2);
+      }
+      .leg-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        flex-shrink: 0;
+      }
+
+      /* ANIM CONTROLS */
+      .anim-ctrl {
+        position: absolute;
+        bottom: 10px;
+        left: 10px;
+        z-index: 20;
+        background: rgba(6, 6, 15, 0.82);
+        backdrop-filter: blur(6px);
+        border: 0.5px solid var(--border);
+        border-radius: 8px;
+        padding: 8px 10px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        min-width: 150px;
+      }
+      .anim-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .anim-playbtn {
+        background: none;
+        border: 0.5px solid var(--border);
+        color: var(--text2);
+        font-size: 11px;
+        padding: 4px 10px;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.15s;
+      }
+      .anim-playbtn:hover,
+      .anim-playbtn.active {
+        background: var(--gold-bg);
+        border-color: var(--gold-border);
+        color: var(--gold);
+      }
+      .anim-t {
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--gold);
+        min-width: 46px;
+      }
+      .anim-sldr {
+        width: 100%;
+        -webkit-appearance: none;
+        height: 3px;
+        background: var(--border);
+        border-radius: 2px;
+        outline: none;
+        cursor: pointer;
+      }
+      .anim-sldr::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        width: 13px;
+        height: 13px;
+        border-radius: 50%;
+        background: var(--gold);
+      }
+    </style>
+  </head>
+  <body>
+    <!-- ── INTRO SCREEN ──────────────────────────── -->
+    <div class="screen" id="screen-intro">
+      <div class="intro-eclipse">🌑</div>
+      <div class="intro-title">
+        Brújula AR<br /><span>Eclipse 12 ago 2026</span>
+      </div>
+      <p class="intro-sub">
+        Apunta el móvil al cielo y ve exactamente dónde estará el Sol, la Luna y
+        la zona de totalidad durante el eclipse.
+      </p>
+      <div class="intro-cards">
+        <div class="icard">
+          <div class="icard-icon">📍</div>
+          <div class="icard-label">GPS para tu posición</div>
+        </div>
+        <div class="icard">
+          <div class="icard-icon">🧭</div>
+          <div class="icard-label">Brújula para orientarte</div>
+        </div>
+        <div class="icard">
+          <div class="icard-icon">☀️</div>
+          <div class="icard-label">Sol y Luna en tiempo real</div>
+        </div>
+      </div>
+      <button class="btn-primary" onclick="startAR()">
+        Iniciar brújula AR
+      </button>
+      <button class="btn-secondary" onclick="startARDemo()">
+        Probar sin sensores (demo)
+      </button>
+    </div>
+
+    <!-- ── AR SCREEN ─────────────────────────────── -->
+    <div class="screen hidden" id="screen-ar">
+      <div class="ar-topbar">
+        <button class="ar-back" onclick="goBack()">← Salir</button>
+        <div class="ar-title">Brújula AR · Eclipse 2026</div>
+        <div class="ar-time-badge" id="ar-time-badge">—</div>
+      </div>
+      <div class="ar-statusbar">
+        <div class="status-pill">
+          <div class="status-dot dot-off" id="dot-gps"></div>
+          <span id="lbl-gps">GPS</span>
+        </div>
+        <div class="status-pill">
+          <div class="status-dot dot-off" id="dot-compass"></div>
+          <span id="lbl-compass">Brújula</span>
+        </div>
+        <div class="status-pill">
+          <div class="status-dot dot-off" id="dot-phase"></div>
+          <span id="lbl-phase">Fase eclipse</span>
+        </div>
+      </div>
+
+      <div class="ar-viewport">
+        <canvas id="ar-canvas"></canvas>
+
+        <!-- Eclipse phase badge -->
+        <div class="phase-badge" id="phase-badge">—</div>
+
+        <!-- Calibration overlay -->
+        <div id="calib-overlay">
+          <div class="calib-icon">🧭</div>
+          <div class="calib-text">
+            Mueve el móvil en forma de
+            <strong style="color: var(--gold)">ocho</strong> en el aire para
+            calibrar la brújula
+          </div>
+          <div class="calib-hint">Esperando señal de orientación…</div>
+        </div>
+
+        <!-- Permission denied overlay -->
+        <div id="perm-overlay">
+          <div class="perm-icon">🚫</div>
+          <div class="perm-title">Permisos denegados</div>
+          <div class="perm-desc">
+            Esta función necesita acceso a la brújula y al GPS del dispositivo.
+            Por favor, actívalos en los ajustes del navegador y recarga la
+            página.
+          </div>
+          <button
+            class="btn-primary"
+            style="max-width: 220px; margin-top: 6px"
+            onclick="location.reload()"
+          >
+            Reintentar
+          </button>
+        </div>
+
+        <!-- Legend -->
+        <div class="ar-legend">
+          <div class="leg-row">
+            <div
+              class="leg-dot"
+              style="background: #f0c040; box-shadow: 0 0 6px #f0c04080"
+            ></div>
+            Sol
+          </div>
+          <div class="leg-row">
+            <div
+              class="leg-dot"
+              style="background: #c8d8f0; box-shadow: 0 0 6px #c8d8f060"
+            ></div>
+            Luna
+          </div>
+          <div class="leg-row">
+            <div
+              class="leg-dot"
+              style="
+                background: rgba(240, 192, 64, 0.35);
+                border: 1px solid rgba(240, 192, 64, 0.6);
+                border-radius: 3px;
+                width: 22px;
+                height: 10px;
+              "
+            ></div>
+            Totalidad
+          </div>
+        </div>
+
+        <!-- Animation controls -->
+        <div class="anim-ctrl">
+          <div class="anim-row">
+            <button class="anim-playbtn" id="anim-btn" onclick="toggleAnim()">
+              ▶
+            </button>
+            <span class="anim-t" id="anim-t">20:17</span>
+          </div>
+          <input
+            class="anim-sldr"
+            id="anim-sldr"
+            type="range"
+            min="0"
+            max="100"
+            value="0"
+            oninput="setAnimFrame(+this.value)"
+          />
+          <div style="font-size: 9px; color: var(--text3)">
+            Avance del eclipse · CEST
+          </div>
+        </div>
+      </div>
+
+      <div class="ar-infobar">
+        <div class="info-cell">
+          <div class="info-lbl">Rumbo cámara</div>
+          <div class="info-val" id="inf-heading">—</div>
+          <div class="info-sub" id="inf-dir">—</div>
+        </div>
+        <div class="info-cell">
+          <div class="info-lbl">Sol · Azimut / Alt</div>
+          <div class="info-val" id="inf-sun">—</div>
+          <div class="info-sub" id="inf-sun-sub">—</div>
+        </div>
+        <div class="info-cell">
+          <div class="info-lbl">Cobertura</div>
+          <div class="info-val" id="inf-cov">—</div>
+          <div class="info-sub" id="inf-cov-sub">—</div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      /* ═══════════════════════════════════════════════
+   ECLIPSE DATA  · 12 Aug 2026 (UT times)
+   Eclipse maximum near 18h29m UT = 20h29m CEST
+   Sun position at maximum over Spain:
+     Azimuth ~262°, Altitude ~8° (varies by location)
+   Moon shadow sweeps W→E through ~18.29–18.57 UT
+═══════════════════════════════════════════════ */
+
+      // Reference: UT 18.29h → 20:17 CEST  /  18.57h → 20:34 CEST
+      const ECLIPSE_START_UT = 18.291; // start of totality sweep
+      const ECLIPSE_END_UT = 18.567;
+      const ECLIPSE_MAX_UT = 18.49; // overall maximum
+
+      // For each animation frame (0–100), compute approximate Sun & Moon positions
+      // Sun moves ~0.25°/min in azimuth at sunset; altitude drops ~0.25°/min
+      // At max: Sun az≈262°, alt≈8° (central Spain). These vary slightly by lat.
+
+      function eclipseState(frac, userLat, userLng) {
+        // frac: 0=start, 1=end of totality window
+        const ut =
+          ECLIPSE_START_UT + frac * (ECLIPSE_END_UT - ECLIPSE_START_UT);
+        const cest_h = Math.floor(ut) + 2;
+        const cest_m = Math.round((ut % 1) * 60);
+        const timeLabel = `${String(cest_h).padStart(2, "0")}:${String(cest_m).padStart(2, "0")}`;
+
+        // Sun position: interpolate from pre-computed values
+        // At 20:17 CEST: az≈260°, alt≈9.5°
+        // At 20:34 CEST: az≈265°, alt≈7.5°
+        // Adjust slightly for latitude (further north = higher alt)
+        const latAdj = (userLat - 40) * 0.15;
+        const sunAz = 260 + frac * 5;
+        const sunAlt = 9.5 - frac * 2 + latAdj;
+
+        // Moon lags Sun by a tiny amount (visual separation decreases to 0 at max)
+        const distToMax = Math.abs(
+          frac -
+            (ECLIPSE_MAX_UT - ECLIPSE_START_UT) /
+              (ECLIPSE_END_UT - ECLIPSE_START_UT),
+        );
+        const moonOffsetAz = (frac < 0.5 ? -1 : 1) * distToMax * 3;
+        const moonOffsetAlt = distToMax * 0.4;
+        const moonAz = sunAz + moonOffsetAz;
+        const moonAlt = sunAlt + moonOffsetAlt;
+
+        // Coverage: parabola peaking at max
+        const covFrac = Math.max(0, 1 - distToMax * 2.4);
+        // Totality band: zone around Sun where totality occurs (latitude band)
+        // Franja sweeps from ~44°N to ~39°N W→E
+        // At time frac: totality center longitude ≈ -9.5 + frac * 15
+        const totalityCenterLng = -9.5 + frac * 15;
+        const totalityCenterLat = 43.5 - frac * 4.5; // franja dips south as it moves east
+
+        // Is user in totality right now?
+        const inTotal =
+          Math.abs(userLng - totalityCenterLng) < 1.2 &&
+          Math.abs(userLat - totalityCenterLat) < 0.8;
+
+        // Coverage for user position
+        let userCov;
+        if (inTotal) {
+          userCov = 100;
+        } else {
+          // Distance from totality band → partial coverage
+          const dLng = Math.abs(userLng - totalityCenterLng);
+          const dLat = Math.abs(userLat - totalityCenterLat);
+          const dist = Math.sqrt(dLng ** 2 + (dLat * 1.5) ** 2);
+          userCov = Math.max(65, Math.round(100 - dist * 8));
+        }
+
+        return {
+          ut,
+          timeLabel,
+          sunAz,
+          sunAlt,
+          moonAz,
+          moonAlt,
+          inTotal,
+          userCov,
+          totalityCenterLng,
+          totalityCenterLat,
+          covFrac,
+        };
+      }
+
+      /* ═══════════════════════════════════════════════
+   STATE
+═══════════════════════════════════════════════ */
+      let state = {
+        heading: 0, // device compass heading (degrees, 0=North)
+        tilt: 45, // device tilt (beta, degrees from horizontal)
+        roll: 0, // device roll (gamma)
+        lat: 40.42,
+        lng: -3.7,
+        hasGPS: false,
+        hasCompass: false,
+        isDemo: false,
+        animFrac: 0,
+        isPlaying: false,
+        calibrated: false,
+      };
+      let animTimer = null;
+      let demoTimer = null;
+      let canvas, ctx;
+      let raf;
+
+      /* ═══════════════════════════════════════════════
+   STARTUP
+═══════════════════════════════════════════════ */
+      function startAR(demo = false) {
+        state.isDemo = demo;
+        document.getElementById("screen-intro").classList.add("hidden");
+        document.getElementById("screen-ar").classList.remove("hidden");
+        initCanvas();
+        if (demo) {
+          startDemoMode();
+        } else {
+          requestPermissions();
+        }
+        requestAnimationFrame(renderLoop);
+      }
+      function startARDemo() {
+        startAR(true);
+      }
+
+      function goBack() {
+        cancelAnimationFrame(raf);
+        clearInterval(animTimer);
+        clearInterval(demoTimer);
+        document.getElementById("screen-ar").classList.add("hidden");
+        document.getElementById("screen-intro").classList.remove("hidden");
+      }
+
+      /* ═══════════════════════════════════════════════
+   CANVAS
+═══════════════════════════════════════════════ */
+      function initCanvas() {
+        canvas = document.getElementById("ar-canvas");
+        ctx = canvas.getContext("2d");
+        resizeCanvas();
+        window.addEventListener("resize", resizeCanvas);
+      }
+      function resizeCanvas() {
+        const vp = canvas.parentElement;
+        canvas.width = vp.clientWidth * window.devicePixelRatio;
+        canvas.height = vp.clientHeight * window.devicePixelRatio;
+        canvas.style.width = vp.clientWidth + "px";
+        canvas.style.height = vp.clientHeight + "px";
+        ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+      }
+
+      /* ═══════════════════════════════════════════════
+   PERMISSIONS & SENSORS
+═══════════════════════════════════════════════ */
+      function requestPermissions() {
+        // GPS
+        if (navigator.geolocation) {
+          navigator.geolocation.watchPosition(
+            (pos) => {
+              state.lat = pos.coords.latitude;
+              state.lng = pos.coords.longitude;
+              state.hasGPS = true;
+              setStatus("gps", "ok", `GPS: ${state.lat.toFixed(2)}°N`);
+            },
+            () => {
+              setStatus("gps", "warn", "GPS no disponible");
+            },
+            { enableHighAccuracy: true },
+          );
+        }
+
+        // Compass — iOS13+ needs explicit permission
+        if (
+          typeof DeviceOrientationEvent !== "undefined" &&
+          typeof DeviceOrientationEvent.requestPermission === "function"
+        ) {
+          DeviceOrientationEvent.requestPermission()
+            .then((r) => {
+              if (r === "granted") listenOrientation();
+              else showPermDenied();
+            })
+            .catch(() => showPermDenied());
+        } else {
+          listenOrientation();
+        }
+      }
+
+      let orientationSourceLocked = false;
+      let headingBuffer = [];
+
+      function listenOrientation() {
+        if ("ondeviceorientationabsolute" in window) {
+          window.addEventListener("deviceorientationabsolute", (e) => {
+            orientationSourceLocked = true;
+            handleOrientation(e);
+          }, true);
+        }
+
+        window.addEventListener("deviceorientation", (e) => {
+          if (!orientationSourceLocked) handleOrientation(e);
+        }, true);
+      }
+
+      
+      let orientationProfile = null;
+
+      function getHeadingFromDevice(e) {
+        const ua = navigator.userAgent.toLowerCase();
+
+        if (e.webkitCompassHeading !== undefined) {
+          orientationProfile = "iphone";
+          return e.webkitCompassHeading;
+        }
+
+        const alpha = e.alpha ?? 0;
+
+        if (!orientationProfile) {
+          if (ua.includes("samsung")) {
+            orientationProfile = "samsung";
+          } else if (ua.includes("android")) {
+            orientationProfile = "android";
+          } else {
+            orientationProfile = "generic";
+          }
+        }
+
+        switch (orientationProfile) {
+          case "samsung":
+            return alpha;
+          case "android":
+            return (360 - alpha) % 360;
+          default:
+            return e.absolute ? ((360 - alpha) % 360) : alpha;
+        }
+      }
+
+
+      function handleOrientation(e) {
+        // alpha: compass heading (0=North on absolute, or arbitrary on relative)
+        // beta: front-back tilt (-180..180), 0=flat, 90=vertical portrait
+        // gamma: left-right tilt (-90..90)
+        let heading = getHeadingFromDevice(e);
+
+        // Filtro adicional para eliminar saltos bruscos
+        headingBuffer.push(heading);
+        if (headingBuffer.length > 12) headingBuffer.shift();
+
+        let avgX = 0, avgY = 0;
+        headingBuffer.forEach(h => {
+          avgX += Math.cos(h * Math.PI / 180);
+          avgY += Math.sin(h * Math.PI / 180);
+        });
+
+        const filteredHeading =
+          (Math.atan2(avgY, avgX) * 180 / Math.PI + 360) % 360;
+
+        state.heading = smoothHeading(state.heading, filteredHeading, 0.05);
+        state.tilt = e.beta !== null ? e.beta : 45;
+        state.roll = e.gamma !== null ? e.gamma : 0;
+        state.hasCompass = true;
+        state.calibrated = true;
+
+        setStatus("compass", "ok", `Brújula: ${Math.round(state.heading)}°`);
+        document.getElementById("calib-overlay").classList.add("hidden");
+      }
+
+      function smoothHeading(current, target, alpha) {
+        // Circular smooth to avoid 359→1 jumps
+        let diff = target - current;
+        if (diff > 180) diff -= 360;
+        if (diff < -180) diff += 360;
+        return (current + diff * alpha + 360) % 360;
+      }
+
+      function showPermDenied() {
+        document.getElementById("perm-overlay").classList.add("visible");
+      }
+      function setStatus(id, level, label) {
+        const dot = document.getElementById("dot-" + id);
+        dot.className = "status-dot dot-" + level;
+        document.getElementById("lbl-" + id).textContent = label;
+      }
+
+      /* ═══════════════════════════════════════════════
+   DEMO MODE — simulates compass rotation
+═══════════════════════════════════════════════ */
+      function startDemoMode() {
+        state.hasGPS = true;
+        state.calibrated = true;
+        document.getElementById("calib-overlay").classList.add("hidden");
+        setStatus("gps", "ok", "Demo · Valencia");
+        setStatus("compass", "ok", "Simulado");
+        state.lat = 39.47;
+        state.lng = -0.38;
+
+        let t = 0;
+        demoTimer = setInterval(() => {
+          t += 0.008;
+          // Slowly sweep heading around the eclipse azimuth (~262°)
+          state.heading = (250 + Math.sin(t) * 40 + 360) % 360;
+          state.tilt = 55 + Math.sin(t * 0.7) * 15; // tilt between 40° and 70°
+          state.roll = Math.sin(t * 0.5) * 8;
+        }, 50);
+      }
+
+      /* ═══════════════════════════════════════════════
+   ANIMATION CONTROL
+═══════════════════════════════════════════════ */
+      function toggleAnim() {
+        state.isPlaying = !state.isPlaying;
+        const btn = document.getElementById("anim-btn");
+        btn.textContent = state.isPlaying ? "⏸" : "▶";
+        btn.classList.toggle("active", state.isPlaying);
+        if (state.isPlaying) {
+          animTimer = setInterval(() => {
+            state.animFrac = (state.animFrac + 0.003) % 1;
+            document.getElementById("anim-sldr").value = Math.round(
+              state.animFrac * 100,
+            );
+          }, 50);
+        } else {
+          clearInterval(animTimer);
+        }
+      }
+      function setAnimFrame(v) {
+        state.animFrac = v / 100;
+      }
+
+      /* ═══════════════════════════════════════════════
+   COORDINATE HELPERS
+═══════════════════════════════════════════════ */
+      // Convert (celestialAz, celestialAlt) → canvas (x, y) given device heading/tilt
+      // Viewport represents a ~90° horizontal FOV, ~60° vertical FOV
+      const H_FOV = 90; // degrees horizontal field of view
+      const V_FOV = 60; // degrees vertical field of view
+
+      function skyToCanvas(celestialAz, celestialAlt, W, H) {
+        // Horizontal: difference between celestial azimuth and device heading
+        let diffAz = celestialAz - state.heading;
+        if (diffAz > 180) diffAz -= 360;
+        if (diffAz < -180) diffAz += 360;
+
+        // Vertical: device tilt (beta) is degrees from flat
+        // beta=90 = portrait vertical pointing to horizon
+        // When beta=90, center of screen = 0° altitude
+        // tilt offset: altitude of center of screen
+        const screenCenterAlt = state.tilt - 90; // how many degrees above horizon is screen center
+
+        const diffAlt = celestialAlt - screenCenterAlt;
+
+        const x = W / 2 + (diffAz / (H_FOV / 2)) * (W / 2);
+        const y = H / 2 - (diffAlt / (V_FOV / 2)) * (H / 2);
+
+        return {
+          x,
+          y,
+          inView:
+            Math.abs(diffAz) < H_FOV * 0.7 && Math.abs(diffAlt) < V_FOV * 0.7,
+        };
+      }
+
+      /* ═══════════════════════════════════════════════
+   RENDER LOOP
+═══════════════════════════════════════════════ */
+      function renderLoop() {
+        raf = requestAnimationFrame(renderLoop);
+        if (!canvas) return;
+
+        const W = canvas.clientWidth;
+        const H = canvas.clientHeight;
+
+        // Clear — deep sky gradient
+        const skyGrad = ctx.createLinearGradient(0, 0, 0, H);
+        skyGrad.addColorStop(0, "#02020c");
+        skyGrad.addColorStop(0.5, "#06060f");
+        skyGrad.addColorStop(1, "#0a0818");
+        ctx.fillStyle = skyGrad;
+        ctx.fillRect(0, 0, W, H);
+
+        const ecl = eclipseState(state.animFrac, state.lat, state.lng);
+
+        // Update UI
+        updateUI(ecl);
+
+        // Draw stars (static, decorative)
+        drawStars(W, H);
+
+        // Draw horizon band
+        drawHorizon(W, H);
+
+        // Draw totality sweep band
+        drawTotalityBand(ecl, W, H);
+
+        // Draw compass arc
+        drawCompassArc(W, H);
+
+        // Draw Moon first (behind Sun)
+        drawMoon(ecl, W, H);
+
+        // Draw Sun
+        drawSun(ecl, W, H);
+
+        // Draw crosshair
+        drawCrosshair(W, H);
+      }
+
+      /* ── STARS ────────────────────────────────── */
+      const STARS = Array.from({ length: 120 }, (_, i) => {
+        const r = (s) => {
+          const x = Math.sin(s) * 10000;
+          return x - Math.floor(x);
+        };
+        return {
+          az: r(i * 7.3) * 360,
+          alt: r(i * 3.1) * 70 - 10,
+          size: r(i * 11.7) < 0.15 ? 1.8 : 1,
+          bright: r(i * 5.5) * 0.5 + 0.15,
+        };
+      });
+
+      function drawStars(W, H) {
+        STARS.forEach((s) => {
+          const p = skyToCanvas(s.az, s.alt, W, H);
+          if (p.inView) {
+            ctx.globalAlpha =
+              s.bright *
+              ((ecl) => (ecl.inTotal ? 0.9 : 0.35))(
+                eclipseState(state.animFrac, state.lat, state.lng),
+              );
+            ctx.fillStyle = "#fff";
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, s.size, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        });
+        ctx.globalAlpha = 1;
+      }
+
+      /* ── HORIZON ──────────────────────────────── */
+      function drawHorizon(W, H) {
+        const h0 = skyToCanvas(state.heading, 0, W, H);
+        // Horizon line
+        ctx.strokeStyle = "rgba(100,150,255,0.25)";
+        ctx.lineWidth = 1.5;
+        ctx.setLineDash([8, 6]);
+        ctx.beginPath();
+        ctx.moveTo(0, h0.y);
+        ctx.lineTo(W, h0.y);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        // Below horizon fill
+        if (h0.y < H) {
+          const grad = ctx.createLinearGradient(
+            0,
+            h0.y,
+            0,
+            Math.min(H, h0.y + 80),
+          );
+          grad.addColorStop(0, "rgba(30,60,20,0.18)");
+          grad.addColorStop(1, "rgba(20,40,15,0.05)");
+          ctx.fillStyle = grad;
+          ctx.fillRect(0, h0.y, W, H - h0.y);
+        }
+
+        // HORIZONTE label
+        ctx.fillStyle = "rgba(100,150,255,0.45)";
+        ctx.font = "10px system-ui";
+        ctx.textAlign = "left";
+        ctx.fillText("HORIZONTE", 10, h0.y - 5);
+      }
+
+      /* ── TOTALITY BAND ────────────────────────── */
+      function drawTotalityBand(ecl, W, H) {
+        // The totality band is a horizontal strip of sky centered at the eclipse path
+        // At any given moment it spans ±0.7° latitude ≈ ±45km width on the ground
+        // We represent it as a band in the sky around where the Moon's shadow is
+        const bandAz = ecl.sunAz;
+        const bandAlt = ecl.sunAlt;
+        const bandHalfW = 8; // degrees wide in azimuth
+        const bandHalfH = 1.5; // degrees tall in altitude
+
+        const corners = [
+          skyToCanvas(bandAz - bandHalfW, bandAlt + bandHalfH, W, H),
+          skyToCanvas(bandAz + bandHalfW, bandAlt + bandHalfH, W, H),
+          skyToCanvas(bandAz + bandHalfW, bandAlt - bandHalfH, W, H),
+          skyToCanvas(bandAz - bandHalfW, bandAlt - bandHalfH, W, H),
+        ];
+
+        ctx.beginPath();
+        ctx.moveTo(corners[0].x, corners[0].y);
+        corners.forEach((c) => ctx.lineTo(c.x, c.y));
+        ctx.closePath();
+
+        const grad = ctx.createLinearGradient(corners[0].x, 0, corners[1].x, 0);
+        grad.addColorStop(0, "rgba(240,192,64,0.00)");
+        grad.addColorStop(0.2, "rgba(240,192,64,0.18)");
+        grad.addColorStop(0.5, "rgba(240,192,64,0.28)");
+        grad.addColorStop(0.8, "rgba(240,192,64,0.18)");
+        grad.addColorStop(1, "rgba(240,192,64,0.00)");
+        ctx.fillStyle = grad;
+        ctx.fill();
+
+        ctx.strokeStyle = "rgba(240,192,64,0.50)";
+        ctx.lineWidth = 1;
+        ctx.setLineDash([5, 4]);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        // Label
+        const mid = skyToCanvas(bandAz, bandAlt + bandHalfH + 1.5, W, H);
+        if (mid.inView) {
+          ctx.fillStyle = "rgba(240,192,64,0.70)";
+          ctx.font = "bold 10px system-ui";
+          ctx.textAlign = "center";
+          ctx.fillText("FRANJA DE TOTALIDAD", mid.x, mid.y);
+        }
+      }
+
+      /* ── COMPASS ARC ──────────────────────────── */
+      function drawCompassArc(W, H) {
+        const arcAlt = -2; // place arc just below horizon
+        const cardinals = [
+          ["N", 0],
+          ["NE", 45],
+          ["E", 90],
+          ["SE", 135],
+          ["S", 180],
+          ["SO", 225],
+          ["O", 270],
+          ["NO", 315],
+        ];
+
+        cardinals.forEach(([lbl, az]) => {
+          const p = skyToCanvas(az, arcAlt, W, H);
+          if (!p.inView) return;
+
+          const isMain = lbl.length === 1;
+          const isN = lbl === "N";
+
+          // Tick
+          const tickH = isMain ? 14 : 8;
+          const horizPt = skyToCanvas(az, 0, W, H);
+          ctx.strokeStyle = isN
+            ? "rgba(255,100,100,0.7)"
+            : isMain
+              ? "rgba(255,255,255,0.5)"
+              : "rgba(255,255,255,0.25)";
+          ctx.lineWidth = isMain ? 1.5 : 1;
+          ctx.beginPath();
+          ctx.moveTo(horizPt.x, horizPt.y);
+          ctx.lineTo(horizPt.x, horizPt.y + tickH);
+          ctx.stroke();
+
+          // Label
+          ctx.fillStyle = isN
+            ? "rgba(255,120,120,0.9)"
+            : isMain
+              ? "rgba(255,255,255,0.65)"
+              : "rgba(255,255,255,0.35)";
+          ctx.font = `${isMain ? "bold " : ""}${isMain ? 13 : 10}px system-ui`;
+          ctx.textAlign = "center";
+          ctx.textBaseline = "top";
+          ctx.fillText(lbl, horizPt.x, horizPt.y + tickH + 3);
+        });
+
+        // Degree ticks every 10°
+        for (let az = 0; az < 360; az += 10) {
+          if (cardinals.some(([, a]) => a === az)) continue;
+          const p = skyToCanvas(az, 0, W, H);
+          if (!p.inView) return;
+          ctx.strokeStyle = "rgba(255,255,255,0.12)";
+          ctx.lineWidth = 0.7;
+          ctx.beginPath();
+          ctx.moveTo(p.x, p.y);
+          ctx.lineTo(p.x, p.y + 5);
+          ctx.stroke();
+        }
+      }
+
+      /* ── MOON ─────────────────────────────────── */
+      function drawMoon(ecl, W, H) {
+        const p = skyToCanvas(ecl.moonAz, ecl.moonAlt, W, H);
+        const R = 26;
+
+        // Glow
+        const g = ctx.createRadialGradient(
+          p.x,
+          p.y,
+          R * 0.5,
+          p.x,
+          p.y,
+          R * 2.2,
+        );
+        g.addColorStop(0, "rgba(180,210,255,0.15)");
+        g.addColorStop(1, "rgba(0,0,0,0)");
+        ctx.fillStyle = g;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, R * 2.2, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Moon disc (dark)
+        ctx.fillStyle = "#0d0d22";
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, R, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Moon rim
+        ctx.strokeStyle = "rgba(180,210,255,0.55)";
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+
+        // Label
+        if (p.inView) {
+          ctx.fillStyle = "rgba(180,210,255,0.7)";
+          ctx.font = "10px system-ui";
+          ctx.textAlign = "center";
+          ctx.textBaseline = "bottom";
+          ctx.fillText(`Luna ${ecl.moonAz.toFixed(0)}°`, p.x, p.y - R - 5);
+        }
+      }
+
+      /* ── SUN ──────────────────────────────────── */
+      function drawSun(ecl, W, H) {
+        const p = skyToCanvas(ecl.sunAz, ecl.sunAlt, W, H);
+        const R = 28;
+        const covFrac = ecl.userCov / 100;
+        const inTotal = ecl.inTotal;
+
+        // Outer glow
+        const glowR = inTotal ? R * 2.5 : R * 1.8;
+        const g = ctx.createRadialGradient(p.x, p.y, R * 0.6, p.x, p.y, glowR);
+        if (inTotal) {
+          g.addColorStop(0, "rgba(240,192,64,0.35)");
+          g.addColorStop(0.4, "rgba(240,192,64,0.12)");
+        } else {
+          g.addColorStop(0, "rgba(255,210,80,0.25)");
+          g.addColorStop(0.4, "rgba(255,180,40,0.08)");
+        }
+        g.addColorStop(1, "rgba(0,0,0,0)");
+        ctx.fillStyle = g;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, glowR, 0, Math.PI * 2);
+        ctx.fill();
+
+        if (inTotal) {
+          // Corona rays
+          for (let i = 0; i < 20; i++) {
+            const angle = (i / 20) * Math.PI * 2;
+            const len = R + 10 + Math.sin(i * 7.3) * 18;
+            ctx.strokeStyle = `rgba(240,192,64,${0.08 + Math.abs(Math.sin(i * 3.1)) * 0.12})`;
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(
+              p.x + Math.cos(angle) * (R + 1),
+              p.y + Math.sin(angle) * (R + 1),
+            );
+            ctx.lineTo(
+              p.x + Math.cos(angle) * len,
+              p.y + Math.sin(angle) * len,
+            );
+            ctx.stroke();
+          }
+          // Black Moon disc
+          ctx.fillStyle = "#09091f";
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, R, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.strokeStyle = "rgba(240,192,64,0.60)";
+          ctx.lineWidth = 1.5;
+          ctx.stroke();
+        } else {
+          // Partial: draw Sun then clip with Moon
+          const sg = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, R);
+          sg.addColorStop(0, "#fff8e0");
+          sg.addColorStop(0.6, "#ffd54f");
+          sg.addColorStop(1, "#f9a825");
+          ctx.fillStyle = sg;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, R, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Moon offset (covering covFrac of Sun)
+          const moonR = R * 1.03;
+          const overlap = covFrac;
+          const moonDx = -R * (1 - overlap * 1.42);
+
+          ctx.save();
+          ctx.globalCompositeOperation = "destination-out";
+          ctx.beginPath();
+          ctx.arc(p.x + moonDx, p.y, moonR, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+
+          ctx.fillStyle = "#0a0a1f";
+          ctx.beginPath();
+          ctx.arc(p.x + moonDx, p.y, moonR, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        // Label
+        if (p.inView) {
+          ctx.fillStyle = inTotal
+            ? "rgba(240,192,64,0.85)"
+            : "rgba(255,220,100,0.75)";
+          ctx.font = "bold 11px system-ui";
+          ctx.textAlign = "center";
+          ctx.textBaseline = "bottom";
+          const lbl = inTotal
+            ? `☀️ TOTALIDAD · ${ecl.userCov}%`
+            : `Sol ${ecl.sunAz.toFixed(0)}° / ${ecl.sunAlt.toFixed(1)}°`;
+          ctx.fillText(lbl, p.x, p.y - R - 6);
+        } else {
+          // Off-screen arrow
+          drawOffscreenArrow(ecl.sunAz, ecl.sunAlt, W, H, "#f0c040", "Sol →");
+        }
+      }
+
+      /* ── OFFSCREEN ARROW ──────────────────────── */
+      function drawOffscreenArrow(az, alt, W, H, color, label) {
+        let diffAz = az - state.heading;
+        if (diffAz > 180) diffAz -= 360;
+        if (diffAz < -180) diffAz += 360;
+
+        const edge = 22;
+        let x = W / 2 + (diffAz / 60) * (W / 2);
+        let y = H / 2;
+        x = Math.max(edge, Math.min(W - edge, x));
+        y = Math.max(edge, Math.min(H - edge, y));
+
+        const angle = Math.atan2(diffAz, 0);
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.rotate(angle);
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.moveTo(0, -12);
+        ctx.lineTo(7, 4);
+        ctx.lineTo(-7, 4);
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+
+        ctx.fillStyle = color;
+        ctx.font = "bold 10px system-ui";
+        ctx.textAlign = "center";
+        ctx.fillText(label, x, y + 18);
+      }
+
+      /* ── CROSSHAIR ────────────────────────────── */
+      function drawCrosshair(W, H) {
+        const cx = W / 2,
+          cy = H / 2;
+        ctx.strokeStyle = "rgba(255,255,255,0.20)";
+        ctx.lineWidth = 1;
+        const len = 16;
+        [
+          [cx - len, cy, cx - 5, cy],
+          [cx + 5, cy, cx + len, cy],
+          [cx, cy - len, cx, cy - 5],
+          [cx, cy + 5, cx, cy + len],
+        ].forEach(([x1, y1, x2, y2]) => {
+          ctx.beginPath();
+          ctx.moveTo(x1, y1);
+          ctx.lineTo(x2, y2);
+          ctx.stroke();
+        });
+        ctx.strokeStyle = "rgba(255,255,255,0.10)";
+        ctx.beginPath();
+        ctx.arc(cx, cy, 30, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+
+      /* ── UPDATE UI ────────────────────────────── */
+      function updateUI(ecl) {
+        // Time badge
+        document.getElementById("ar-time-badge").textContent =
+          ecl.timeLabel + " CEST";
+        document.getElementById("anim-t").textContent = ecl.timeLabel;
+
+        // Info bar
+        const dirs = [
+          "N",
+          "NNE",
+          "NE",
+          "ENE",
+          "E",
+          "ESE",
+          "SE",
+          "SSE",
+          "S",
+          "SSO",
+          "SO",
+          "OSO",
+          "O",
+          "ONO",
+          "NO",
+          "NNO",
+        ];
+        const hDir = dirs[Math.round(state.heading / 22.5) % 16];
+        document.getElementById("inf-heading").textContent =
+          Math.round(state.heading) + "°";
+        document.getElementById("inf-dir").textContent = "Mirando al " + hDir + (orientationProfile ? " · " + orientationProfile : "");
+
+        document.getElementById("inf-sun").textContent =
+          `${ecl.sunAz.toFixed(0)}° / ${ecl.sunAlt.toFixed(1)}°`;
+        document.getElementById("inf-sun-sub").textContent =
+          ecl.sunAlt < 5 ? "⚠️ Bajo el horizonte" : "Azimut / Altitud";
+
+        document.getElementById("inf-cov").textContent = ecl.userCov + "%";
+        document.getElementById("inf-cov-sub").textContent = ecl.inTotal
+          ? "🌑 TOTALIDAD"
+          : "Parcial";
+
+        // Phase status
+        const phaseLabel = ecl.inTotal
+          ? "🌑 ECLIPSE TOTAL AHORA"
+          : `Eclipse parcial · ${ecl.userCov}% cubierto`;
+        setStatus("phase", ecl.inTotal ? "ok" : "warn", phaseLabel);
+
+        // Phase badge (prominente)
+        const badge = document.getElementById("phase-badge");
+        badge.textContent = ecl.inTotal
+          ? "🌑 TOTALIDAD · " + ecl.timeLabel
+          : ecl.timeLabel + " · " + ecl.userCov + "% cubierto";
+        badge.classList.toggle("visible", true);
+      }
+
+      /* ── TICK ANIM SLIDER ────────────────────── */
+      setInterval(() => {
+        if (!state.isPlaying) return;
+        document.getElementById("anim-sldr").value = Math.round(
+          state.animFrac * 100,
+        );
+      }, 200);
+    </script>
+  </body>
+</html>
