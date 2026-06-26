@@ -1,0 +1,25 @@
+# Configuración de GitHub Pages
+# https://docs.github.com/en/pages
+
+title: "Eclipse Solar Total 2026"
+description: "Mapa de sombras y brújula AR para el eclipse solar del 12 de agosto de 2026"
+lang: es
+
+# Tema — minimal es el más limpio y compatible
+theme: minima
+
+# URL base (cámbiala por tu usuario y nombre de repositorio)
+# url: "https://tuusuario.github.io"
+# baseurl: "/tu-repo"
+
+# Excluir archivos innecesarios del build
+exclude:
+  - README.md
+  - "*.sh"
+  - "*.log"
+
+# Permitir que los archivos .html se sirvan directamente sin Jekyll los procese
+# (importante para que tus apps funcionen tal cual)
+include:
+  - brujula_profesional.html
+  - eclipse-solar-2026sombras.html
